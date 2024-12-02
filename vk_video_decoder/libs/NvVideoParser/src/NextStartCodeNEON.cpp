@@ -25,7 +25,7 @@ size_t VulkanVideoDecoder::next_start_code<SIMD_ISA::NEON>(const uint8_t *pdatai
         uint8x16_t vdata_prev2 = vextq_u8(vBfr, vdata, 14);
         uint8_t idx0n[16] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
         uint8x16_t v015 = vld1q_u8(idx0n);
-        for ( ; i < datasize32 - 32; i += 32)
+        for ( ; i < datasize32; i += 32)
         {
             for (int c = 0; c < 32; c += 16)
             {
@@ -62,6 +62,10 @@ size_t VulkanVideoDecoder::next_start_code<SIMD_ISA::NEON>(const uint8_t *pdatai
             }
         } // main processing loop end
         m_BitBfr = (pdatain[i-2] << 8) | pdatain[i-1];
+        if (i >= datasize) {
+            found_start_code = false;
+            return datasize;
+        }
     }
     // process a tail (rest):
     uint32_t bfr = m_BitBfr;

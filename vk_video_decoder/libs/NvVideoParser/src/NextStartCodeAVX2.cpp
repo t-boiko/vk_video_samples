@@ -23,7 +23,7 @@ size_t VulkanVideoDecoder::next_start_code<SIMD_ISA::AVX2>(const uint8_t *pdatai
         __m256i vdata_alignr16b_init = _mm256_permute2f128_si256(vBfr, vdata, 1 | (2<<4));
         __m256i vdata_prev1 = _mm256_alignr_epi8(vdata, vdata_alignr16b_init, 15);
         __m256i vdata_prev2 = _mm256_alignr_epi8(vdata, vdata_alignr16b_init, 14);
-        for ( ; i < datasize64 - 64; i += 64)
+        for ( ; i < datasize64; i += 64)
         {
             for (int c = 0; c < 64; c += 32) // this might force compiler to unroll the loop so we might have 2 loads in parallel
             {
@@ -49,6 +49,10 @@ size_t VulkanVideoDecoder::next_start_code<SIMD_ISA::AVX2>(const uint8_t *pdatai
             }
         } // main processing loop end
         m_BitBfr = (pdatain[i-2] << 8) | pdatain[i-1];
+        if (i >= datasize) {
+            found_start_code = false;
+            return datasize;
+        }
     }
     // process a tail (rest):
     uint32_t bfr = m_BitBfr;

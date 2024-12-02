@@ -24,7 +24,7 @@ size_t VulkanVideoDecoder::next_start_code<SIMD_ISA::AVX512>(const uint8_t *pdat
         __m512i vdata_alignr48b_init = _mm512_alignr_epi32(vdata, vBfr, 12);
         __m512i vdata_prev1 = _mm512_alignr_epi8(vdata, vdata_alignr48b_init, 15);
         __m512i vdata_prev2 = _mm512_alignr_epi8(vdata, vdata_alignr48b_init, 14);
-        for ( ; i < datasize128 - 128; i += 128)
+        for ( ; i < datasize128; i += 128)
         {
             for (int c = 0; c < 128; c += 64) // this might force compiler to unroll the loop so we might have 2 loads in parallel
             {
@@ -53,6 +53,10 @@ size_t VulkanVideoDecoder::next_start_code<SIMD_ISA::AVX512>(const uint8_t *pdat
             }
         } // main processing loop end
         m_BitBfr = (pdatain[i-2] << 8) | pdatain[i-1];
+        if (i >= datasize) {
+            found_start_code = false;
+            return datasize;
+        }
     }
     // process a tail (rest):
     uint32_t bfr = m_BitBfr;

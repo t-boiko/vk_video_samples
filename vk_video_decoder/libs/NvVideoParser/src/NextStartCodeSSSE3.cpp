@@ -22,7 +22,7 @@ size_t VulkanVideoDecoder::next_start_code<SIMD_ISA::SSSE3>(const uint8_t *pdata
         __m128i vBfr = _mm_set1_epi16(((m_BitBfr << 8) & 0xFF00) | ((m_BitBfr >> 8) & 0xFF));
         __m128i vdata_prev1 = _mm_alignr_epi8(vdata, vBfr, 15);
         __m128i vdata_prev2 = _mm_alignr_epi8(vdata, vBfr, 14);
-        for ( ; i < datasize32 - 32; i += 32)
+        for ( ; i < datasize32; i += 32)
         {
             for (int c = 0; c < 32; c += 16)
             {
@@ -47,6 +47,10 @@ size_t VulkanVideoDecoder::next_start_code<SIMD_ISA::SSSE3>(const uint8_t *pdata
             }
         } // main processing loop end
         m_BitBfr = (pdatain[i-2] << 8) | pdatain[i-1];
+        if (i >= datasize) {
+            found_start_code = false;
+            return datasize;
+        }
     }
     // process a tail (rest):
     uint32_t bfr = m_BitBfr;
